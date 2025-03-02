@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Ingresos y Gastos</title>
+  <!-- Tailwind CSS desde CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <!-- Biblioteca para exportar a Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <!-- Biblioteca para generar PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      background-image: url('https://via.placeholder.com/1920x1080'); /* Cambia esta URL por la imagen de fondo de los 6 departamentos */
+      background-size: cover;
+      background-position: center;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold text-center mb-6 text-white">CONTROL DE INGRESOS Y GASTOS</h1>
+
+    <!-- Formulario para registrar ingresos/gastos -->
+    <div class="card p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-4">Nuevo Registro</h2>
+      <form id="registroForm" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1">Local:</label>
+          <select id="local" class="w-full p-2 border border-gray-300 rounded">
+            <option value="1">Local 1</option>
+            <option value="2">Local 2</option>
+            <option value="3">Local 3</option>
+            <option value="4">Local 4</option>
+            <option value="5">Local 5</option>
+            <option value="6">Local 6</option>
+            <option value="7">Reparación General</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Tipo:</label>
+          <select id="tipo" class="w-full p-2 border border-gray-300 rounded">
+            <option value="ingreso">Ingreso</option>
+            <option value="gasto">Gasto</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Monto:</label>
+          <input type="number" id="monto" class="w-full p-2 border border-gray-300 rounded" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1">Concepto:</label>
+          <input type="text" id="concepto" class="w-full p-2 border border-gray-300 rounded" required>
+        </div>
+        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Registrar</button>
+      </form>
+    </div>
+
+    <!-- Utilidad y distribución -->
+    <div class="card p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-4">Utilidad y Distribución</h2>
+      <p class="mb-2">Utilidad Total: <span id="utilidadTotal" class="font-bold">$0.00</span></p>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Samaria</h3>
+          <p>Monto a recibir: <span id="samariaMonto" class="font-bold">$0.00</span></p>
+          <p>Monto entregado: <span id="samariaEntregado" class="font-bold">$0.00</span></p>
+          <p>Saldo pendiente: <span id="samariaPendiente" class="font-bold">$0.00</span></p>
+          <button onclick="mostrarModal('Samaria')" class="mt-2 bg-green-500 text-white p-2 rounded hover:bg-green-600">Entregar Utilidad</button>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Efraín</h3>
+          <p>Monto a recibir: <span id="efrainMonto" class="font-bold">$0.00</span></p>
+          <p>Monto entregado: <span id="efrainEntregado" class="font-bold">$0.00</span></p>
+          <p>Saldo pendiente: <span id="efrainPendiente" class="font-bold">$0.00</span></p>
+          <button onclick="mostrarModal('Efraín')" class="mt-2 bg-green-500 text-white p-2 rounded hover:bg-green-600">Entregar Utilidad</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para especificar el monto y medio de entrega -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center p-4">
+      <div class="card p-6 rounded-lg shadow-md w-full max-w-md">
+        <h2 class="text-xl font-semibold mb-4">Entregar Utilidad a <span id="modalUsuario"></span></h2>
+        <form id="entregaForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium mb-1">Monto a Entregar:</label>
+            <input type="number" id="modalMonto" class="w-full p-2 border border-gray-300 rounded" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1">Medio de Entrega:</label>
+            <select id="medio" class="w-full p-2 border border-gray-300 rounded" required>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="cheque">Cheque</option>
+              <option value="otro">Otro</option>
+            </select>
+          </div>
+          <div class="flex justify-end space-x-2">
+            <button type="button" onclick="cerrarModal()" class="bg-gray-500 text-white p-2 rounded hover:bg-gray-600">Cancelar</button>
+            <button type="submit" class="bg-green-500 text-white p-2 rounded hover:bg-green-600">Entregar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Historial de registros -->
+    <div class="card p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-4">Historial de Registros</h2>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2 border">Local</th>
+            <th class="p-2 border">Tipo</th>
+            <th class="p-2 border">Monto</th>
+            <th class="p-2 border">Concepto</th>
+            <th class="p-2 border">Fecha</th>
+            <th class="p-2 border">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="registrosBody">
+          <!-- Registros se añadirán aquí -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Historial de entregas -->
+    <div class="card p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-xl font-semibold mb-4">Historial de Entregas</h2>
+      <table class="w-full border-collapse">
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="p-2 border">Usuario</th>
+            <th class="p-2 border">Monto</th>
+            <th class="p-2 border">Medio de Entrega</th>
+            <th class="p-2 border">Fecha</th>
+          </tr>
+        </thead>
+        <tbody id="entregasBody">
+          <!-- Entregas se añadirán aquí -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Botón para descargar corte mensual -->
+    <div class="card p-6 rounded-lg shadow-md">
+      <h2 class="text-xl font-semibold mb-4">Corte Mensual</h2>
+      <button onclick="descargarExcel()" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Descargar Corte Mensual en Excel</button>
+    </div>
+  </div>
+
+  <!-- Script JavaScript -->
+  <script>
+    const { jsPDF } = window.jspdf;
+    let registros = [];
+    let entregas = [];
+    let usuarioActual = '';
+    let saldos = { Samaria: 0, Efraín: 0 };
+    let registroEditando = null;
+
+    // Fechas de pago de los locales
+    const fechasPago = {
+      1: 26, // Local 1: 26 de cada mes
+      2: 14, // Local 2: 14 de cada mes
+      4: 17, // Local 4: 17 de cada mes
+      5: 15, // Local 5: 15 de cada mes
+      6: 3   // Local 6: 3 de cada mes
+    };
+
+    // Función para calcular la utilidad
+    function calcularUtilidad() {
+      const ingresos = registros.filter(r => r.tipo === 'ingreso').reduce((sum, r) => sum + r.monto, 0);
+      const gastos = registros.filter(r => r.tipo === 'gasto').reduce((sum, r) => sum + r.monto, 0);
+      const utilidad = ingresos - gastos;
+      document.getElementById('utilidadTotal').textContent = `$${utilidad.toFixed(2)}`;
+
+      // Dividir la utilidad entre Samaria y Efraín
+      saldos.Samaria = utilidad / 2;
+      saldos.Efraín = utilidad / 2;
+
+      // Actualizar montos en la interfaz
+      actualizarSaldos();
+    }
+
+    // Función para actualizar los saldos en la interfaz
+    function actualizarSaldos() {
+      document.getElementById('samariaMonto').textContent = `$${saldos.Samaria.toFixed(2)}`;
+      document.getElementById('efrainMonto').textContent = `$${saldos.Efraín.toFixed(2)}`;
+
+      // Calcular montos entregados y pendientes
+      const entregasSamaria = entregas.filter(e => e.usuario === 'Samaria').reduce((sum, e) => sum + e.monto, 0);
+      const entregasEfraín = entregas.filter(e => e.usuario === 'Efraín').reduce((sum, e) => sum + e.monto, 0);
+
+      document.getElementById('samariaEntregado').textContent = `$${entregasSamaria.toFixed(2)}`;
+      document.getElementById('efrainEntregado').textContent = `$${entregasEfraín.toFixed(2)}`;
+
+      document.getElementById('samariaPendiente').textContent = `$${(saldos.Samaria - entregasSamaria).toFixed(2)}`;
+      document.getElementById('efrainPendiente').textContent = `$${(saldos.Efraín - entregasEfraín).toFixed(2)}`;
+    }
+
+    // Función para agregar un registro
+    document.getElementById('registroForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const local = document.getElementById('local').value;
+      const tipo = document.getElementById('tipo').value;
+      const monto = parseFloat(document.getElementById('monto').value);
+      const concepto = document.getElementById('concepto').value;
+      const fecha = new Date().toLocaleString();
+
+      if (registroEditando !== null) {
+        // Editar registro existente
+        registros[registroEditando] = { local, tipo, monto, concepto, fecha };
+        registroEditando = null;
+      } else {
+        // Agregar nuevo registro
+        registros.push({ local, tipo, monto, concepto, fecha });
+
+        // Generar recibo si es un ingreso
+        if (tipo === 'ingreso') {
+          generarReciboPDF(local, monto, concepto, fecha);
+        }
+      }
+
+      actualizarRegistros();
+      calcularUtilidad();
+      e.target.reset();
+    });
+
+    // Función para generar un recibo en PDF
+    function generarReciboPDF(local, monto, concepto, fecha) {
+      const doc = new jsPDF();
+      doc.text(`Recibo de Pago - Local ${local}`, 10, 10);
+      doc.text(`Fecha: ${fecha}`, 10, 20);
+      doc.text(`Monto: $${monto.toFixed(2)}`, 10, 30);
+      doc.text(`Concepto: ${concepto}`, 10, 40);
+      doc.save(`Recibo_Local_${local}_${fecha.replace(/[/:]/g, '-')}.pdf`);
+    }
+
+    // Función para actualizar la tabla de registros
+    function actualizarRegistros() {
+      const tbody = document.getElementById('registrosBody');
+      tbody.innerHTML = registros.map((r, index) => `
+        <tr class="border">
+          <td class="p-2 border">${r.local === '7' ? 'Reparación General' : `Local ${r.local}`}</td>
+          <td class="p-2 border">${r.tipo}</td>
+          <td class="p-2 border">$${r.monto.toFixed(2)}</td>
+          <td class="p-2 border">${r.concepto}</td>
+          <td class="p-2 border">${r.fecha}</td>
+          <td class="p-2 border">
+            <button onclick="editarRegistro(${index})" class="bg-yellow-500 text-white p-1 rounded hover:bg-yellow-600">Editar</button>
+            <button onclick="eliminarRegistro(${index})" class="bg-red-500 text-white p-1 rounded hover:bg-red-600">Eliminar</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Función para editar un registro
+    function editarRegistro(index) {
+      const registro = registros[index];
+      document.getElementById('local').value = registro.local;
+      document.getElementById('tipo').value = registro.tipo;
+      document.getElementById('monto').value = registro.monto;
+      document.getElementById('concepto').value = registro.concepto;
+      registroEditando = index;
+    }
+
+    // Función para eliminar un registro
+    function eliminarRegistro(index) {
+      registros.splice(index, 1);
+      actualizarRegistros();
+      calcularUtilidad();
+    }
+
+    // Función para mostrar el modal de entrega
+    function mostrarModal(usuario) {
+      usuarioActual = usuario;
+      document.getElementById('modalUsuario').textContent = usuario;
+      document.getElementById('modalMonto').value = '';
+      document.getElementById('modal').classList.remove('hidden');
+    }
+
+    // Función para cerrar el modal
+    function cerrarModal() {
+      document.getElementById('modal').classList.add('hidden');
+    }
+
+    // Función para registrar la entrega de utilidad
+    document.getElementById('entregaForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const monto = parseFloat(document.getElementById('modalMonto').value);
+      const medio = document.getElementById('medio').value;
+      const fecha = new Date().toLocaleString();
+
+      if (monto > saldos[usuarioActual]) {
+        alert(`No puedes entregar más de $${saldos[usuarioActual].toFixed(2)} a ${usuarioActual}.`);
+        return;
+      }
+
+      entregas.push({ usuario: usuarioActual, monto, medio, fecha });
+      saldos[usuarioActual] -= monto;
+      actualizarEntregas();
+      actualizarSaldos();
+      cerrarModal();
+      e.target.reset();
+    });
+
+    // Función para actualizar la tabla de entregas
+    function actualizarEntregas() {
+      const tbody = document.getElementById('entregasBody');
+      tbody.innerHTML = entregas.map(e => `
+        <tr class="border">
+          <td class="p-2 border">${e.usuario}</td>
+          <td class="p-2 border">$${e.monto.toFixed(2)}</td>
+          <td class="p-2 border">${e.medio}</td>
+          <td class="p-2 border">${e.fecha}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Función para descargar el corte mensual en Excel
+    function descargarExcel() {
+      const registrosMensuales = registros.map(r => ({
+        Local: r.local === '7' ? 'Reparación General' : `Local ${r.local}`,
+        Tipo: r.tipo,
+        Monto: r.monto,
+        Concepto: r.concepto,
+        Fecha: r.fecha
+      }));
+
+      const entregasMensuales = entregas.map(e => ({
+        Usuario: e.usuario,
+        Monto: e.monto,
+        Medio: e.medio,
+        Fecha: e.fecha
+      }));
+
+      const wsRegistros = XLSX.utils.json_to_sheet(registrosMensuales);
+      const wsEntregas = XLSX.utils.json_to_sheet(entregasMensuales);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, wsRegistros, "Registros");
+      XLSX.utils.book_append_sheet(wb, wsEntregas, "Entregas");
+      XLSX.writeFile(wb, "Corte_Mensual.xlsx");
+    }
+
+    // Función para verificar fechas de pago
+    function verificarFechasPago() {
+      const hoy = new Date();
+      const dia = hoy.getDate();
+
+      for (const [local, fechaPago] of Object.entries(fechasPago)) {
+        if (dia === fechaPago) {
+          alert(`¡Hoy es el día de pago del Local ${local}!`);
+        }
+      }
+    }
+
+    // Verificar fechas de pago al cargar la página
+    verificarFechasPago();
+  </script>
+</body>
+</html>
